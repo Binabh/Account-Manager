@@ -5,16 +5,16 @@ import clsx from 'clsx';
 
 import {Button} from '@renderer/components/FormElements';
 import Icon, {IconType} from '@renderer/components/Icon';
-import AddBankSigningKeysModal from '@renderer/containers/Bank/AddBankSigningKeysModal';
+import AddValidatorSigningKeysModal from '@renderer/containers/Validator/AddValidatorSigningKeysModal';
 import {useAddress, useBooleanState} from '@renderer/hooks';
-import {getIsManagedBank, getManagedBanks} from '@renderer/selectors';
-import {setManagedBank} from '@renderer/store/app';
+import {getIsManagedValidator, getManagedValidators} from '@renderer/selectors';
+import {setManagedValidator} from '@renderer/store/app';
 import {AppDispatch, RootState} from '@renderer/types';
 import {parseAddressData} from '@renderer/utils/address';
 import {displayToast} from '@renderer/utils/toast';
 
 import Tile from '../Tile';
-import './TileBankSigningDetails.scss';
+import './TileValidatorSigningDetails.scss';
 
 interface Item {
   key: string;
@@ -28,23 +28,23 @@ interface ComponentProps {
   items: Item[];
 }
 
-const TileBankSigningDetails: FC<ComponentProps> = ({className, items}) => {
+const TileValidatorSigningDetails: FC<ComponentProps> = ({className, items}) => {
   const [addSigningKeyModalIsOpen, toggleSigningKeyModal] = useBooleanState(false);
   const address = useAddress();
   const dispatch = useDispatch<AppDispatch>();
-  const isManagedBank = useSelector((state: RootState) => getIsManagedBank(state, address));
-  const managedBanks = useSelector(getManagedBanks);
-  const managedBank = managedBanks[address];
+  const isManagedValidator = useSelector((state: RootState) => getIsManagedValidator(state, address));
+  const managedValidators = useSelector(getManagedValidators);
+  const managedValidator = managedValidators[address];
 
   const buttonText = useMemo(() => {
-    const prefix = !!managedBank?.account_signing_key && !!managedBank?.nid_signing_key ? 'Edit' : 'Add';
+    const prefix = !!managedValidator?.account_signing_key && !!managedValidator?.nid_signing_key ? 'Edit' : 'Add';
     return `${prefix} Signing Keys (for DevOps)`;
-  }, [managedBank]);
+  }, [managedValidator]);
 
-  const handleAddManagedBank = (): void => {
+  const handleAddManagedValidator = (): void => {
     const {ipAddress, port, protocol} = parseAddressData(address);
     dispatch(
-      setManagedBank({
+      setManagedValidator({
         account_signing_key: '',
         ip_address: ipAddress,
         nickname: '',
@@ -65,33 +65,33 @@ const TileBankSigningDetails: FC<ComponentProps> = ({className, items}) => {
       const {key, ref, title, value} = item;
       return (
         <div key={key}>
-          <div className="TileBankSigningDetails__top">
-            <div className="TileBankSigningDetails__title">{title}</div>
+          <div className="TileValidatorSigningDetails__top">
+            <div className="TileValidatorSigningDetails__title">{title}</div>
             <CopyToClipboard onCopy={handleCopy(item)} text={value}>
-              <Icon className="TileBankSigningDetails__copy-icon" icon={IconType.contentCopy} ref={ref} />
+              <Icon className="TileValidatorSigningDetails__copy-icon" icon={IconType.contentCopy} ref={ref} />
             </CopyToClipboard>
           </div>
-          <div className="TileBankSigningDetails__value">{value}</div>
+          <div className="TileValidatorSigningDetails__value">{value}</div>
         </div>
       );
     });
   };
 
   return (
-    <Tile className={clsx('TileBankSigningDetails', className)}>
+    <Tile className={clsx('TileValidatorSigningDetails', className)}>
       {renderItems()}
-      {isManagedBank ? (
+      {isManagedValidator ? (
         <Button color="secondary" onClick={toggleSigningKeyModal}>
           {buttonText}
         </Button>
       ) : (
-        <Button color="secondary" onClick={handleAddManagedBank}>
-          Add to Managed Banks
+        <Button color="secondary" onClick={handleAddManagedValidator}>
+          Add to Managed Validators
         </Button>
       )}
-      {addSigningKeyModalIsOpen && <AddBankSigningKeysModal close={toggleSigningKeyModal} />}
+      {addSigningKeyModalIsOpen && <AddValidatorSigningKeysModal close={toggleSigningKeyModal} />}
     </Tile>
   );
 };
 
-export default TileBankSigningDetails;
+export default TileValidatorSigningDetails;

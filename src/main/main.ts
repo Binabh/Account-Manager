@@ -2,9 +2,10 @@
 /* eslint-disable global-require */
 /* eslint-disable @typescript-eslint/no-var-requires */
 
-import {app, BrowserWindow, Menu} from 'electron';
+import {app, BrowserWindow, ipcMain, Menu} from 'electron';
 import contextMenu from 'electron-context-menu';
 import installExtension, {REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS} from 'electron-devtools-installer';
+import fs from 'fs';
 
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
 
@@ -73,7 +74,6 @@ const template = [
     label: 'Window',
     submenu: [
       {role: 'minimize'},
-      {role: 'zoom'},
       ...(isMac ? [{type: 'separator'}, {role: 'front'}, {type: 'separator'}, {role: 'window'}] : [{role: 'close'}]),
     ],
   },
@@ -94,7 +94,9 @@ const template = [
 const menu = Menu.buildFromTemplate(template);
 Menu.setApplicationMenu(menu);
 
-contextMenu();
+contextMenu({
+  menu: (defaultActions) => [defaultActions.inspect()],
+});
 
 const createWindow = (): void => {
   const mainWindow = new BrowserWindow({
@@ -130,5 +132,15 @@ app.on('activate', () => {
   // dock icon is clicked and there are no other windows open.
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow();
+  }
+});
+
+ipcMain.on('download-signing-key', (event, {filePath, signingKey}) => {
+  try {
+    fs.writeFileSync(filePath, signingKey);
+    event.reply('download-signing-key-success');
+  } catch (error) {
+    console.log('Failed to save file', error);
+    event.reply('download-signing-key-fail');
   }
 });
